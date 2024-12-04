@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waifu Hot or Not</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .image-comparison {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .waifu-card {
+            flex: 1;
+            min-width: 300px;
+            max-width: 450px;
+            text-align: center;
+            padding: 15px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .waifu-card img {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            cursor: pointer;
+        }
+
+        .vote-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #ff4081;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            margin: 10px;
+        }
+
+        .vote-button:hover {
+            background-color: #f50057;
+            transform: scale(1.05);
+        }
+
+        .vote-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .new-round-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 20px;
+        }
+
+        .new-round-button:hover {
+            background-color: #45a049;
+        }
+
+        .score {
+            font-size: 18px;
+            font-weight: bold;
+            color: #666;
+            margin: 10px 0;
+        }
+
+        .winner {
+            border: 3px solid #4CAF50;
+            animation: pulse 1s infinite;
+        }
+
+        .leaderboard {
+            margin-top: 20px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .leaderboard h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+        }
+
+        .leaderboard-item img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+        }
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .error-message {
+            color: #ff0000;
+            background-color: #ffe6e6;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .image-comparison {
+                flex-direction: column;
+            }
+            
+            .waifu-card {
+                width: 100%;
+                max-width: none;
+            }
+        }
+
+        /* Full-screen image viewer styles */
+        #fullScreenOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #fullScreenImage {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            animation: zoomIn 0.3s ease;
+        }
+
+        @keyframes zoomIn {
+            from {
+                transform: scale(0.7);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .close-fullscreen {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="container">
+        <h1>Waifu Hot or Not</h1>
+        <div id="errorMessage" class="error-message"></div>
+        
+        <div class="image-comparison">
+            <div class="waifu-card">
+                <img id="waifu1" src="" alt="Waifu 1" onerror="handleImageError(this)">
+                <div class="score">Score: 0</div>
+                <button class="vote-button" onclick="vote(0)">Hot 🔥</button>
+            </div>
+            <div class="waifu-card">
+                <img id="waifu2" src="" alt="Waifu 2" onerror="handleImageError(this)">
+                <div class="score">Score: 0</div>
+                <button class="vote-button" onclick="vote(1)">Hot 🔥</button>
+            </div>
+        </div>
+        <button class="new-round-button" onclick="newRound()">New Round</button>
+
+        <div class="leaderboard">
+            <h2>Top Voted Images</h2>
+            <div id="leaderboardContent"></div>
+        </div>
+    </div>
+
+    <div id="fullScreenOverlay">
+        <button class="close-fullscreen" onclick="closeFullScreen()">&times;</button>
+        <img id="fullScreenImage" src="" alt="Full Screen Image">
+    </div>
+
+    <script>
+        // Global variables
+        let currentImages = ['', ''];
+        let imageVotes = JSON.parse(localStorage.getItem('imageVotes')) || {};
+
+        // Update leaderboard with real-time data
+        function updateLeaderboard() {
+            const leaderboardContent = document.getElementById('leaderboardContent');
+            leaderboardContent.innerHTML = ''; // Clear previous entries
+
+            // Sort images by votes in descending order
+            const sortedImages = Object.entries(imageVotes)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5); // Top 5 images
+
+            sortedImages.forEach(([url, votes], index) => {
+                const leaderboardItem = document.createElement('div');
+                leaderboardItem.classList.add('leaderboard-item');
+                leaderboardItem.innerHTML = `
+                    <span>#${index + 1}</span>
+                    <img src="${url}" alt="Leaderboard Image">
+                    <span>Votes: ${votes}</span>
+                `;
+                leaderboardContent.appendChild(leaderboardItem);
+            });
+        }
+
+        // Fetch a single waifu image
+        async function fetchSingleWaifuImage() {
+            try {
+                const response = await fetch('https://api.waifu.pics/sfw/waifu');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const imageData = await response.json();
+                return imageData.url;
+            } catch (error) {
+                console.error('Failed to fetch image:', error);
+                showError('Failed to load image');
+                return null;
+            }
+        }
+
+        // Vote for an image
+        async function vote(index) {
+            // Increment votes for the selected image
+            const votedImageUrl = currentImages[index];
+            imageVotes[votedImageUrl] = (imageVotes[votedImageUrl] || 0) + 1;
+
+            // Save votes to local storage
+            localStorage.setItem('imageVotes', JSON.stringify(imageVotes));
+
+            // Update vote count for the voted image
+            const scoreElement = document.querySelector(`#waifu${index + 1} + .score`);
+            scoreElement.textContent = `Score: ${imageVotes[votedImageUrl]}`;
+
+            // Fetch a new image for the non-voted slot
+            const nonVotedIndex = index === 0 ? 1 : 0;
+            try {
+                // Show loading spinner
+                document.getElementById('loading').style.display = 'flex';
+
+                // Fetch new image
+                const newImageUrl = await fetchSingleWaifuImage();
+                
+                if (newImageUrl) {
+                    // Update image source
+                    const newImg = document.getElementById(`waifu${nonVotedIndex + 1}`);
+                    newImg.src = newImageUrl;
+
+                    // Update current images array
+                    currentImages[nonVotedIndex] = newImageUrl;
+
+                    // Update score for new image
+                    const scoreElement = document.querySelector(`#waifu${nonVotedIndex + 1} + .score`);
+                    scoreElement.textContent = `Score: ${imageVotes[newImageUrl] || 0}`;
+                }
+
+                // Update leaderboard
+                updateLeaderboard();
+
+                // Hide loading spinner
+                document.getElementById('loading').style.display = 'none';
+            } catch (error) {
+                // Show error message
+                showError(error.message || 'Failed to load image');
+                
+                // Hide loading spinner
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // Initial leaderboard load and image fetch
+        window.onload = async function() {
+            try {
+                // Show loading spinner
+                document.getElementById('loading').style.display = 'flex';
+                
+                // Fetch two initial images
+                const responses = await Promise.all([
+                    fetch('https://api.waifu.pics/sfw/waifu'),
+                    fetch('https://api.waifu.pics/sfw/waifu')
+                ]);
+
+                // Parse JSON responses
+                const imageData = await Promise.all(
+                    responses.map(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                );
+
+                // Extract image URLs
+                const [image1, image2] = imageData;
+
+                // Update image sources
+                const img1 = document.getElementById('waifu1');
+                const img2 = document.getElementById('waifu2');
+
+                img1.src = image1.url;
+                img2.src = image2.url;
+
+                // Store current images
+                currentImages = [image1.url, image2.url];
+
+                // Update vote counts for current images
+                const score1 = document.querySelector('#waifu1 + .score');
+                const score2 = document.querySelector('#waifu2 + .score');
+                
+                score1.textContent = `Score: ${imageVotes[image1.url] || 0}`;
+                score2.textContent = `Score: ${imageVotes[image2.url] || 0}`;
+
+                // Update leaderboard
+                updateLeaderboard();
+
+                // Hide loading spinner
+                document.getElementById('loading').style.display = 'none';
+            } catch (error) {
+                // Show error message
+                showError(error.message || 'Failed to load images');
+                
+                // Hide loading spinner
+                document.getElementById('loading').style.display = 'none';
+            }
+        };
+
+        // Show error message to user
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            
+            // Hide error after 3 seconds
+            setTimeout(() => {
+                errorElement.style.display = 'none';
+            }, 3000);
+        }
+
+        // Handle image load errors
+        function handleImageError(img) {
+            showError('Image failed to load');
+            fetchWaifuImages();
+        }
+
+        // Start new round
+        function newRound() {
+            fetchWaifuImages();
+        }
+
+        // Function to open full-screen image
+        function openFullScreen(imageUrl) {
+            const fullScreenOverlay = document.getElementById('fullScreenOverlay');
+            const fullScreenImage = document.getElementById('fullScreenImage');
+            
+            fullScreenImage.src = imageUrl;
+            fullScreenOverlay.style.display = 'flex';
+        }
+
+        // Function to close full-screen image
+        function closeFullScreen() {
+            const fullScreenOverlay = document.getElementById('fullScreenOverlay');
+            fullScreenOverlay.style.display = 'none';
+        }
+
+        // Modify image elements to be clickable
+        function setupImageClickHandlers() {
+            const img1 = document.getElementById('waifu1');
+            const img2 = document.getElementById('waifu2');
+
+            img1.style.cursor = 'pointer';
+            img2.style.cursor = 'pointer';
+
+            img1.onclick = function() {
+                openFullScreen(this.src);
+            };
+
+            img2.onclick = function() {
+                openFullScreen(this.src);
+            };
+        }
+
+        // Add event listener to setup click handlers after images load
+        document.addEventListener('DOMContentLoaded', setupImageClickHandlers);
+
+        // Modify existing onload to call setupImageClickHandlers after images load
+        const originalOnload = window.onload;
+        window.onload = async function() {
+            await originalOnload();
+            setupImageClickHandlers();
+        };
+    </script>
+</body>
+</html>
