@@ -158,7 +158,7 @@ export default function GalleryView({ nsfw = false }: { nsfw?: boolean }) {
         <div>
           <h1 className="text-2xl font-bold sm:text-3xl">Discover</h1>
           <p className="text-sm text-muted-foreground">
-            A Pinterest-style feed of anime art. Bookmark or download anything you like.
+            A Pinterest-style feed of anime artwork. Bookmark or download anything you like.
           </p>
         </div>
         <Button
