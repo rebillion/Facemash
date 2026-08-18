@@ -30,7 +30,7 @@ export default function BookmarksView() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold sm:text-3xl">Your Bookmarks</h1>
         <p className="text-sm text-muted-foreground">
-          Everything you saved lives here, even after you reload the page.
+          Everything you saved lives here, locally.
         </p>
       </div>
 
